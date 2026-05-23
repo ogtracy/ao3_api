@@ -24,7 +24,7 @@ def load_logged_in_work():
 
 def attempt_login():
     session = Session(input("Username? "), input("password? "))
-    print(f"Bookmarks: {session.bookmarks}")
+    # print(f"Bookmarks: {session.bookmarks}")
     url = "https://archiveofourown.org/works/14392692/chapters/33236241"
     workid = utils.workid_from_url(url)
     work = Work(workid, session=session)

@@ -167,9 +167,11 @@ class Session(GuestSession):
         payload = {'user[login]': username,
                    'user[password]': password,
                    'authenticity_token': self.authenticity_token}
-        post = self.post("https://archiveofourown.org/users/login", params=payload, allow_redirects=False)
-        if not post.status_code == 302:
-            raise utils.LoginError("Invalid username or password")
+        post = self.post("https://archiveofourown.org/users/login", params=payload, allow_redirects=True)
+        current_url = post.url
+        print("reached page: " + current_url)
+        if current_url.endswith("archiveofourown.org/auth_error"):
+            raise utils.LoginError("Could not login. Reached auth error page. Be certain you used the right username and password")
 
         self._subscriptions_url = "https://archiveofourown.org/users/{0}/subscriptions?page={1:d}"
         self._bookmarks_url = "https://archiveofourown.org/users/{0}/bookmarks?page={1:d}"
