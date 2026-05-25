@@ -98,7 +98,7 @@ class Work:
 
         work_container = self._soup.find("div", {"id", "workskin"})
         if work_container is None:
-            print("Work loaded improperly; You may see unexpected behaviour")
+            print("Something went wrong while loading the work; You may see unexpected behaviour")
 
         if load_chapters:
             self.load_chapters()
@@ -962,10 +962,10 @@ class Work:
         return soup
 
     def create_work(self, req):
-        """Request a web page and return a BeautifulSoup object.
+        """return a BeautifulSoup object from a Response object.
 
         Args:
-            url (str): Url to request
+            req (requester.Request): http response from AO3
 
         Returns:
             bs4.BeautifulSoup: BeautifulSoup object representing the requested page's html
@@ -977,13 +977,13 @@ class Work:
         return soup
 
     def request_raw(self, url):
-        """Request a web page and return a BeautifulSoup object.
+        """Request a web page and return a Response object.
 
         Args:
             url (str): Url to request
 
         Returns:
-            bs4.BeautifulSoup: BeautifulSoup object representing the requested page's html
+            requester.Request: request object containing the http response from AO3
         """
 
         req = self.get(url)
