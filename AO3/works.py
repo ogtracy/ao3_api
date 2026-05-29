@@ -76,10 +76,30 @@ class Work:
             if isinstance(getattr(self.__class__, attr), cached_property):
                 if attr in self.__dict__:
                     delattr(self, attr)
-        
-        self._soup = self.request(f"https://archiveofourown.org/works/{self.id}?view_adult=true&view_full_work=true")
-        if "Error 404" in self._soup.find("h2", {"class", "heading"}).text:
+
+        req = self.request_raw(f"https://archiveofourown.org/works/{self.id}?view_adult=true&view_full_work=true")
+        self._soup = self.create_work(req)
+
+        # check that work is in the format we expect
+        if "archiveofourown.org/users/login" in req.url:
+            raise utils.AuthError("This work is only available to registered users of the Archive")
+
+        missing_work_notif = self._soup.find("h2", {"class", "heading"})
+        if missing_work_notif is not None and "Error 404" in missing_work_notif.text:
             raise utils.InvalidIdError("Cannot find work")
+
+        hidden_work_notif = self._soup.find("p", {"class", "notice"})
+        if hidden_work_notif is None:
+            hidden_work_notif = self._soup.find("li", {"class", "mystery"})
+        if (hidden_work_notif is not None and
+                "This work is part of an ongoing challenge and will be revealed soon!" in hidden_work_notif.text
+        ):
+            raise utils.HiddenWorkError("This work is hidden and cannot be viewed except by the author.")
+
+        work_container = self._soup.find("div", {"id", "workskin"})
+        if work_container is None:
+            print("Something went wrong while loading the work; You may see unexpected behaviour")
+
         if load_chapters:
             self.load_chapters()
         
@@ -940,6 +960,34 @@ class Work:
             warnings.warn("This work is very big and might take a very long time to load")
         soup = BeautifulSoup(req.content, "lxml")
         return soup
+
+    def create_work(self, req):
+        """return a BeautifulSoup object from a Response object.
+
+        Args:
+            req (requester.Request): http response from AO3
+
+        Returns:
+            bs4.BeautifulSoup: BeautifulSoup object representing the requested page's html
+        """
+
+        if len(req.content) > 650000:
+            warnings.warn("This work is very big and might take a very long time to load")
+        soup = BeautifulSoup(req.content, "lxml")
+        return soup
+
+    def request_raw(self, url):
+        """Request a web page and return a Response object.
+
+        Args:
+            url (str): Url to request
+
+        Returns:
+            requester.Request: request object containing the http response from AO3
+        """
+
+        req = self.get(url)
+        return req
 
     @staticmethod
     def str_format(string):

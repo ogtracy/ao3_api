@@ -169,7 +169,6 @@ class Session(GuestSession):
                    'authenticity_token': self.authenticity_token}
         post = self.post("https://archiveofourown.org/users/login", params=payload, allow_redirects=True)
         current_url = post.url
-        print("reached page: " + current_url)
         if current_url.endswith("archiveofourown.org/auth_error"):
             raise utils.LoginError("Could not login. Reached auth error page. Be certain you used the right username and password")
 
